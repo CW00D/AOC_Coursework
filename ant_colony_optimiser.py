@@ -1,13 +1,15 @@
 import numpy as np
 import random
+import os
+import csv
 
-def main(number_of_ants, evaporation_rate):
+def run_simulation(log_file, experiment_set, run_number, number_of_ants, evaporation_rate, ):
     best_fitness = float("inf")
     best_path = []
 
     #Setting constants for run (Note: should be editted for different runs)
     NUMBER_OF_ITEMS = 500
-    NUMBER_OF_BINS = 10
+    NUMBER_OF_BINS = 50
     MAX_ITERATIONS = 10000
     
     #Setting lists to be used
@@ -17,8 +19,8 @@ def main(number_of_ants, evaporation_rate):
             pheromone_matrix[(item, bin)] = random.uniform(0.001, 0.999)
     
     #different weights for items
-    WEIGHTS_OF_ITEMS = np.arange(1, NUMBER_OF_ITEMS + 1)
-    #WEIGHTS_OF_ITEMS = np.array(list(map(lambda i: (i**2)/2, range(1, NUMBER_OF_ITEMS+1))))
+    #WEIGHTS_OF_ITEMS = np.arange(1, NUMBER_OF_ITEMS + 1)
+    WEIGHTS_OF_ITEMS = np.array(list(map(lambda i: (i**2)/2, range(1, NUMBER_OF_ITEMS+1))))
     
     #setting_variables to be used
     evaluations = 0
@@ -30,9 +32,14 @@ def main(number_of_ants, evaporation_rate):
             best_fitness = min(fitnesses)
             best_path = selected_paths[fitnesses.index(min(fitnesses))]
 
+        #logging result to experiment results
         if evaluations % 500 == 0:
-            print("For evaluation {0} the best fitness was {1}. The average fitness was {2}".format(evaluations, min(fitnesses), sum(fitnesses)/len(fitnesses)))
-        pheromone_matrix = add_pheromone(NUMBER_OF_ITEMS,NUMBER_OF_BINS, pheromone_matrix, selected_paths, fitnesses)
+            with open(log_file, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([experiment_set, run_number, evaluations, number_of_ants, evaporation_rate, min(fitnesses), sum(fitnesses)/len(fitnesses)])
+            #print("For evaluation {0} the best fitness was {1}. The average fitness was {2}".format(evaluations, min(fitnesses), sum(fitnesses)/len(fitnesses)))
+        
+        pheromone_matrix = add_pheromone(NUMBER_OF_ITEMS, NUMBER_OF_BINS, number_of_ants, pheromone_matrix, selected_paths, fitnesses)
         pheromone_matrix = evaporate_pheromone(pheromone_matrix, evaporation_rate)
         evaluations += number_of_ants
     
@@ -61,11 +68,11 @@ def traverse_graph(number_of_items, number_of_bins, weights_of_items, number_of_
             selected_paths[i][j] = bin_for_item
             bin_weights[bin_for_item] += weights_of_items[j]
         
-        #calculating fitness for ant's path
+        #calculating fitness for ant"s path
         fitnesses[i] = max(bin_weights) - min(bin_weights)
     return selected_paths, fitnesses
         
-def add_pheromone(number_of_items, number_of_bins, pheromone_matrix, selected_paths, fitnesses):
+def add_pheromone(number_of_items, number_of_bins, number_of_ants, pheromone_matrix, selected_paths, fitnesses):
     for i in range(number_of_ants):
         #reward function handles solution found by setting all other paths to 0 and 0 path to 1
         if fitnesses[i] == 0:
@@ -88,22 +95,37 @@ def evaporate_pheromone(pheromone_matrix, evaporation_rate, min_pheromone=1e-6):
         pheromone_matrix[key] *= evaporation_rate
     return pheromone_matrix
 
-repeats = int(input("Simulation Runs: "))
-number_of_ants = int(input("Number of Ants: "))
-evaporation_rate = float(input("Evaporation Rate: "))
-best_fitness = float("inf")
-best_path = []
+def main():
+    #setting up the log file for experiment
+    log_file = "BPP2_Experiment_Results.csv"
+    if not os.path.exists(log_file):  # Avoid overwriting if it already exists
+        with open(log_file, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Experiment_Set", "Run_Number", "Iteration", "p", "e", "Best_Fitness", "Average_Fitness"])
 
-for i in range(repeats):
-    #Ensures a different seed for each repeat
-    print("__________________________NEW RUN_______________________________")
-    np.random.seed(i)
-    random.seed(i)
-    run_best_fitness, run_best_path = main(number_of_ants, evaporation_rate)
-    if run_best_fitness < best_fitness:
-        best_fitness = run_best_fitness
-        best_path = run_best_path
+    #getting experiment inputs
+    experiment_set = int(input("Experiment Set: "))
+    repeats = int(input("Simulation Runs: "))
+    #number_of_ants will represent p
+    number_of_ants = int(input("Number of Ants: "))
+    #evaporation_rate will represent e
+    evaporation_rate = float(input("Evaporation Rate: "))
+    best_fitness = float("inf")
+    best_path = []
 
-print("Out of all {0} runs, the lowest difference in weight between the max and min bins was {1}. The path is shown below".format(repeats, best_fitness))
-print("chart showing best fitness allocation")
-print(best_path)
+    for run_number in range(repeats):
+        #Ensures a different seed for each repeat
+        print("__________________________NEW RUN_______________________________")
+        np.random.seed(run_number)
+        random.seed(run_number)
+        run_best_fitness, run_best_path = run_simulation(log_file, experiment_set, run_number, number_of_ants, evaporation_rate)
+        if run_best_fitness < best_fitness:
+            best_fitness = run_best_fitness
+            best_path = run_best_path
+
+    print("Out of all {0} runs, the lowest difference in weight between the max and min bins was {1}. The path is shown below".format(repeats, best_fitness))
+    print("chart showing best fitness allocation")
+    print(best_path)
+
+if __name__ == "__main__":
+    main()
