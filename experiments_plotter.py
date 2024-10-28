@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-def plot_charts(experiment, metric_to_plot):
+def plot_combined_charts(experiment):
     #Load the appropriate dataset based on the experiment parameter
     if experiment == 1:
         results = pd.read_csv("BPP1_Experiment_Results.csv")
     elif experiment == 2:
         results = pd.read_csv("BPP2_Experiment_Results.csv")
-
+    
     #Group by "Experiment_Set" and create individual datasets
     grouped = results.groupby("Experiment_Set")
     experiment_datasets = {name: group.reset_index(drop=True) for name, group in grouped}
@@ -18,43 +18,38 @@ def plot_charts(experiment, metric_to_plot):
     figure, axis = plt.subplots(2, 2, figsize=(12, 10))
     axis = axis.flatten()
 
-    #Determine a common y-axis limit across all experiment sets for consistency
-    all_fitness_values = [experiment_datasets[exp_num][metric_to_plot] for exp_num in experiment_datasets.keys()]
-    y_axis_max = max([max(values) for values in all_fitness_values]) * 1.05
-
     #Iterate over each experiment set to create individual plots
-    for i, experiment_number in enumerate(experiment_datasets.keys()):
-        dataset = experiment_datasets[experiment_number]
-
-        #Plot individual runs on the primary y-axis
-        sns.lineplot(data=dataset, x="Iteration", y=metric_to_plot, hue="Run_Number", marker="o", ax=axis[i], legend="full")
+    for i, (experiment_number, dataset) in enumerate(experiment_datasets.items()):
+        average_data = dataset.groupby("Iteration").mean()[["Best_Fitness", "Average_Fitness", "Standard_Deviation"]]
         
-        #Calculate and plot the average line on the primary y-axis
-        average_fitness = dataset.groupby("Iteration")[metric_to_plot].mean()
-        axis[i].plot(average_fitness.index, average_fitness.values, color="red", linewidth=2.5, label="Average")
+        #Plot lines
+        sns.lineplot(data=average_data, x=average_data.index, y="Best_Fitness", ax=axis[i], label="Best Fitness", color="darkgreen", legend=False)
+        sns.lineplot(data=average_data, x=average_data.index, y="Average_Fitness", ax=axis[i], label="Average Fitness", color="darkred", legend=False)
+        sns.lineplot(data=average_data, x=average_data.index, y="Standard_Deviation", ax=axis[i], label="Standard Deviation", color="blue", linestyle="--", legend=False)
         
-        #Set consistent y-axis limits for the primary axis
-        axis[i].set_ylim(0, y_axis_max)
-
-        #Titles and labels for the primary y-axis
-        axis[i].set_title(f"{metric_to_plot} Over Iterations\n(Experiment Set {experiment_number}, p={dataset.iloc[0]['p']}, e={dataset.iloc[0]['e']})")
+        #Set titles and labels
+        axis[i].set_title(f"(Experiment Set {experiment_number}, p={dataset.iloc[0]['p']}, e={dataset.iloc[0]['e']})")
         axis[i].set_xlabel("Iteration")
-        axis[i].set_ylabel(f"{metric_to_plot}")
+        axis[i].set_ylabel("Fitness Value")
 
-    #Adjust layout to prevent overlap
-    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+        #Set y-axis limit & grid lines
+        axis[i].set_ylim(0, average_data.max().max() * 1.05)
+        axis[i].grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.7)
 
-    #Define the output folder path and create it if it doesn"t exist
+    #Create a single legend from the last plot
+    handles, labels = axis[-1].get_legend_handles_labels()
+    figure.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.05), fontsize=12)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+    #Save the plot to a file
     folder_name = "Experiment_Results"
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
-    #Save the plot to a file with the metric in the filename
-    save_path = os.path.join(folder_name, f"Experiment_{experiment}_{metric_to_plot}.png")
+    save_path = os.path.join(folder_name, f"Experiment_BBP{experiment}_Metrics.png")
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
 
-#Generate and save plots for both Best_Fitness and Average_Fitness
+#Generate and save combined plots for both experiments
 for i in range(1, 3):
-    plot_charts(i, "Best_Fitness")
-    plot_charts(i, "Average_Fitness")
-    plot_charts(i, "Standard_Deviation")
+    plot_combined_charts(i)
