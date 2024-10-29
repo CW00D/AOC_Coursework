@@ -28,7 +28,7 @@ def plot_combined_charts(experiment):
         sns.lineplot(data=average_data, x=average_data.index, y="Standard_Deviation", ax=axis[i], label="Standard Deviation", color="blue", linestyle="--", legend=False)
         
         #Set titles and labels
-        axis[i].set_title(f"(Experiment Set {experiment_number}, p={dataset.iloc[0]['p']}, e={dataset.iloc[0]['e']})")
+        axis[i].set_title(f"Experiment Set {experiment_number}, p={dataset.iloc[0]['p']}, e={dataset.iloc[0]['e']}")
         axis[i].set_xlabel("Iteration")
         axis[i].set_ylabel("Fitness Value")
 

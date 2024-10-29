@@ -6,22 +6,23 @@ import csv
 def run_simulation(experiment_number, experiment_set, run_number, number_of_ants, evaporation_rate, ):
     #Setting constants for run (Note: should be editted for different runs)
     NUMBER_OF_ITEMS = 500
-    NUMBER_OF_BINS = 50
     MAX_ITERATIONS = 10000
     
+    #Different experiment setups
+    if experiment_number == 1:
+        WEIGHTS_OF_ITEMS = np.arange(1, NUMBER_OF_ITEMS + 1)
+        NUMBER_OF_BINS = 10
+        log_file = "BPP1_Experiment_Results.csv"
+    elif experiment_number == 2:
+        WEIGHTS_OF_ITEMS = np.array(list(map(lambda i: (i**2)/2, range(1, NUMBER_OF_ITEMS+1))))
+        NUMBER_OF_BINS = 50
+        log_file = "BPP2_Experiment_Results.csv"
+
     #Setting lists to be used
     pheromone_matrix = {}
     for item in range(NUMBER_OF_ITEMS):
         for bin in range(NUMBER_OF_BINS):
             pheromone_matrix[(item, bin)] = random.uniform(0, 1)
-
-    #Different experiment setups
-    if experiment_number == 1:
-        WEIGHTS_OF_ITEMS = np.arange(1, NUMBER_OF_ITEMS + 1)
-        log_file = "BPP1_Experiment_Results.csv"
-    elif experiment_number == 2:
-        WEIGHTS_OF_ITEMS = np.array(list(map(lambda i: (i**2)/2, range(1, NUMBER_OF_ITEMS+1))))
-        log_file = "BPP2_Experiment_Results.csv"
     
     #setting up the log file for experiment
     if not os.path.exists(log_file):
