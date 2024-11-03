@@ -80,10 +80,9 @@ def run_simulation(experiment_number, experiment_set, run_number, number_of_ants
         add_pheromone(nodes_list, nodes_list[0], selected_paths, fitnesses)
         evaporate_pheromone(nodes_list, evaporation_rate)
 
-        fitness_standard_deviation = np.std(fitnesses)
-
         #Logging result to experiment results
         if evaluations % 500 == 0:
+            fitness_standard_deviation = np.std(fitnesses)
             with open(log_file, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([experiment_set, run_number, evaluations, number_of_ants, evaporation_rate, min(fitnesses), sum(fitnesses)/len(fitnesses), fitness_standard_deviation])
