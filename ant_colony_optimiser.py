@@ -69,11 +69,11 @@ def run_simulation(experiment_number, experiment_set, run_number, number_of_ants
     if experiment_number == 1:
         WEIGHTS_OF_ITEMS = np.arange(1, NUMBER_OF_ITEMS + 1)
         NUMBER_OF_BINS = 10
-        log_file = "BPP1_Test_Experiment_Results.csv"
+        log_file = "BPP1_Experiment_Results.csv"
     elif experiment_number == 2:
         WEIGHTS_OF_ITEMS = np.array(list(map(lambda i: (i**2)/2, range(1, NUMBER_OF_ITEMS+1))))
         NUMBER_OF_BINS = 50
-        log_file = "BPP2_Test_Experiment_Results.csv"
+        log_file = "BPP2_Experiment_Results.csv"
 
     #setting up the log file for experiment
     if not os.path.exists(log_file):
