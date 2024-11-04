@@ -2,6 +2,7 @@ import numpy as np
 import random
 import os
 import csv
+from numba import njit
 
 class Node:
     def __init__(self, number_of_bins: int, item_number: int, bin_number: int):
